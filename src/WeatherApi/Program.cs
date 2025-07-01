@@ -1,6 +1,7 @@
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.EntityFrameworkCore;
 using WeatherApi.Data;
+using WeatherApi.Models;
 using WeatherApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,8 +26,7 @@ builder.Services.AddScoped<IWeatherService, WeatherService>();
 
 // Add health checks
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<WeatherContext>()
-    .AddApplicationInsightsPublisher();
+    .AddDbContextCheck<WeatherContext>();
 
 // Add CORS for demo purposes
 builder.Services.AddCors(options =>
