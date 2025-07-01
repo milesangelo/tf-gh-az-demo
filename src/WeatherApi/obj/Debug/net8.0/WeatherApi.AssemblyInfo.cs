@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © Demo Company")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4db73a7ff67eda83467d5ae1611b11b787d50a9a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f3996bc21e4853c9b4707cf180176bc61a01dceb")]
 [assembly: System.Reflection.AssemblyProductAttribute("Weather API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WeatherApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

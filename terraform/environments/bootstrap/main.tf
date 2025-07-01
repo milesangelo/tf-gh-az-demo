@@ -19,7 +19,7 @@ terraform {
   backend "azurerm" {
     # These will be set via GitHub Actions or local override
     resource_group_name  = "weatherapi-demo-terraform-state-rg"
-    storage_account_name = "REPLACE_WITH_ACTUAL_STORAGE_ACCOUNT"
+    storage_account_name = "weatherdemotf7314"
     container_name       = "tfstate"
     key                  = "bootstrap/terraform.tfstate"
   }
@@ -97,7 +97,7 @@ resource "random_string" "suffix" {
 
 # Create a shared Key Vault for demo secrets
 resource "azurerm_key_vault" "demo" {
-  name                = "${local.demo_prefix}-kv-${random_string.suffix.result}"
+  name                = "weather-kv-${random_string.suffix.result}"
   location            = local.location
   resource_group_name = azurerm_resource_group.app.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
