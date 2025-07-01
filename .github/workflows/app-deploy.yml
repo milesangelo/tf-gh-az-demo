@@ -90,16 +90,18 @@ jobs:
         id: get-app-name
         run: |
           ENV="${{ github.event.inputs.environment || 'dev' }}"
-          APP_NAME=$(az webapp list --resource-group "${ENV}-weatherapi-rg" --query "[?contains(name, 'weatherapi')].name" -o tsv | head -1)
+          # Use the correct resource group name pattern from bootstrap
+          RG_NAME="weatherapi-demo-${ENV}-rg"
+          APP_NAME=$(az webapp list --resource-group "${RG_NAME}" --query "[0].name" -o tsv)
           echo "app-name=${APP_NAME}" >> $GITHUB_OUTPUT
           echo "App Service Name: ${APP_NAME}"
+          echo "Resource Group: ${RG_NAME}"
 
       - name: Deploy to Azure Web App (Staging Slot)
         if: ${{ github.event.inputs.slot == 'staging' || github.event.inputs.slot == '' }}
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ steps.get-app-name.outputs.app-name }}
-          slot-name: "staging"
           package: ./publish
 
       - name: Deploy to Azure Web App (Production)
@@ -136,13 +138,12 @@ jobs:
         run: |
           ENV="${{ github.event.inputs.environment || 'dev' }}"
           SLOT="${{ github.event.inputs.slot || 'staging' }}"
-          APP_NAME=$(az webapp list --resource-group "${ENV}-weatherapi-rg" --query "[?contains(name, 'weatherapi')].name" -o tsv | head -1)
+          # Use the correct resource group name pattern from bootstrap
+          RG_NAME="weatherapi-demo-${ENV}-rg"
+          APP_NAME=$(az webapp list --resource-group "${RG_NAME}" --query "[0].name" -o tsv)
 
-          if [ "$SLOT" == "staging" ]; then
-            URL="https://${APP_NAME}-staging.azurewebsites.net"
-          else
-            URL="https://${APP_NAME}.azurewebsites.net"
-          fi
+          # Simple deployment - no staging slots in our basic setup
+          URL="https://${APP_NAME}.azurewebsites.net"
 
           echo "app-url=${URL}" >> $GITHUB_OUTPUT
           echo "Testing URL: ${URL}"
@@ -200,13 +201,10 @@ jobs:
       - name: Swap Deployment Slots
         run: |
           ENV="${{ github.event.inputs.environment }}"
-          APP_NAME=$(az webapp list --resource-group "${ENV}-weatherapi-rg" --query "[?contains(name, 'weatherapi')].name" -o tsv | head -1)
+          # Use the correct resource group name pattern from bootstrap
+          RG_NAME="weatherapi-demo-${ENV}-rg"
+          APP_NAME=$(az webapp list --resource-group "${RG_NAME}" --query "[0].name" -o tsv)
 
-          echo "Swapping staging slot to production for app: ${APP_NAME}"
-          az webapp deployment slot swap \
-            --resource-group "${ENV}-weatherapi-rg" \
-            --name "${APP_NAME}" \
-            --slot staging \
-            --target-slot production
-
-          echo "Slot swap completed successfully!"
+          echo "Note: Slot swap not applicable for basic app service without staging slots"
+          echo "App Name: ${APP_NAME}"
+          echo "Resource Group: ${RG_NAME}"
