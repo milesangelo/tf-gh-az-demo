@@ -1,0 +1,13 @@
+<Project>
+
+    <PropertyGroup>
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+      <WarningsAsErrors />
+      <WarningsNotAsErrors>NU1701</WarningsNotAsErrors>
+      <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+      <Company>Demo Company</Company>
+      <Product>Weather API</Product>
+      <Copyright>Copyright © Demo Company</Copyright>
+    </PropertyGroup>
+  
+  </Project>
