@@ -7,23 +7,52 @@ echo "========================================"
 # Set variables
 export DEMO_PREFIX="weatherapi-demo"
 export LOCATION="East US 2"
-export KILOMETERS_SUBSCRIPTION_ID="b902128f-2e17-43c6-8ba5-49bf19e3f82b"
-export FALLBACK_SUBSCRIPTION_ID="b902128f-2e17-43c6-8ba5-49bf19e3f82b"
 
-# Test and set subscription
-echo "🔍 Testing Kilometers Subscription..."
-if az account set --subscription "${KILOMETERS_SUBSCRIPTION_ID}" 2>/dev/null; then
-    export SUBSCRIPTION_ID="${KILOMETERS_SUBSCRIPTION_ID}"
-    export SUBSCRIPTION_NAME="Kilometers"
-    echo "✅ Using Kilometers Subscription"
-else
-    echo "⚠️  Falling back to Subscription 1"
-    export SUBSCRIPTION_ID="${FALLBACK_SUBSCRIPTION_ID}"
-    export SUBSCRIPTION_NAME="Subscription1"
-    az account set --subscription "${SUBSCRIPTION_ID}"
-fi
+# Function to detect and set subscription
+detect_subscription() {
+    echo "🔍 Detecting available Azure subscriptions..."
+    
+    # Get current subscription if one is already set
+    CURRENT_SUB=$(az account show --query id -o tsv 2>/dev/null || echo "")
+    
+    if [ ! -z "$CURRENT_SUB" ]; then
+        CURRENT_NAME=$(az account show --query name -o tsv 2>/dev/null || echo "Current Subscription")
+        echo "📋 Found active subscription: $CURRENT_NAME ($CURRENT_SUB)"
+        
+        read -p "Use this subscription? (y/n) [y]: " -r REPLY
+        REPLY=${REPLY:-y}
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            export SUBSCRIPTION_ID="$CURRENT_SUB"
+            export SUBSCRIPTION_NAME="$CURRENT_NAME"
+            return 0
+        fi
+    fi
+    
+    # List available subscriptions
+    echo "Available subscriptions:"
+    az account list --query "[].{Name:name, SubscriptionId:id, State:state}" -o table
+    
+    echo ""
+    read -p "Enter subscription ID to use: " -r SUBSCRIPTION_INPUT
+    
+    if [ -z "$SUBSCRIPTION_INPUT" ]; then
+        echo "❌ No subscription ID provided"
+        exit 1
+    fi
+    
+    # Validate and set subscription
+    if az account set --subscription "$SUBSCRIPTION_INPUT" 2>/dev/null; then
+        export SUBSCRIPTION_ID="$SUBSCRIPTION_INPUT"
+        export SUBSCRIPTION_NAME=$(az account show --query name -o tsv)
+        echo "✅ Using subscription: $SUBSCRIPTION_NAME ($SUBSCRIPTION_ID)"
+    else
+        echo "❌ Failed to set subscription: $SUBSCRIPTION_INPUT"
+        exit 1
+    fi
+}
 
-echo "📋 Using Subscription: ${SUBSCRIPTION_NAME} (${SUBSCRIPTION_ID})"
+# Detect and set subscription
+detect_subscription
 
 # Generate unique storage account name
 export STORAGE_ACCOUNT_NAME="weatherdemotf$(date +%s | tail -c 6)"
@@ -34,7 +63,7 @@ echo "🏗️  Creating bootstrap resources..."
 az group create \
   --name "${DEMO_PREFIX}-terraform-state-rg" \
   --location "${LOCATION}" \
-  --tags Project="WeatherAPI-Demo" Owner="mvendetti" Purpose="TerraformBootstrap" \
+  --tags Project="WeatherAPI-Demo" Owner="$(whoami)" Purpose="TerraformBootstrap" \
   --output none
 
 echo "✅ Created resource group: ${DEMO_PREFIX}-terraform-state-rg"
@@ -47,7 +76,7 @@ az storage account create \
   --sku Standard_LRS \
   --kind StorageV2 \
   --allow-blob-public-access false \
-  --tags Project="WeatherAPI-Demo" Owner="mvendetti" Purpose="TerraformState" \
+  --tags Project="WeatherAPI-Demo" Owner="$(whoami)" Purpose="TerraformState" \
   --output none
 
 az storage container create \
@@ -141,7 +170,7 @@ if [ -f "terraform/environments/dev/main.tf" ]; then
     echo "✅ Updated dev Terraform configuration"
 fi
 
-# Create summary file
+# Create summary file (will be gitignored)
 cat > setup-summary.txt << EOF
 WeatherAPI Demo Setup Summary
 ============================
